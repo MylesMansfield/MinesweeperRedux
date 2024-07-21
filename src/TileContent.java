@@ -1,0 +1,1 @@
+public enum TileContent {ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, FLAG, BOMB, EMPTY}
