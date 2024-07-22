@@ -192,13 +192,15 @@ public class GameUI extends JFrame {
         timer.start();
     }
 
-    public void handleEnd(boolean isWin) {
+    public void handleEnd(boolean isWin, Tile[] updatedBoard) {
         timer.stop();
 
         if(bestScore < clockCount.get()) bestScore = clockCount.get();
 
         updateControlPanel();
+        updateBoardPanel(updatedBoard);
 
+        /*
         boardPanel.removeAll();
         boardPanel.repaint();
 
@@ -215,6 +217,8 @@ public class GameUI extends JFrame {
         }
 
         boardPanel.revalidate();
+        */
+
 
         /* TODO:
             if(win) Change board to water without tile details (just grass and water no flags or numbers)

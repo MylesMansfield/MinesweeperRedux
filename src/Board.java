@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class Board {
     private int tileWidth;
     private int tileHeight;
@@ -67,30 +69,91 @@ public class Board {
         Cell cell = board[row][col];
 
         if(!gameStarted) { // First Click
-            populateBoard();
+            populateBoard(row, col);
             gameStarted = true;
         }
 
         // Click on existing game
-        if(!cell.isHidden) return;
+        if(!cell.isHidden) return; // If visible tile ignore
+        if(cell.value == -1) { // Ends game if bomb is clicked on
+            cell.isHidden = false;
+            gameLocked = true;
+            return;
+        }
 
-        // TODO: make move on board
-        cell.isHidden = false;
+        makeMove(row, col);
 
-
-        if(checkEnd()) {
+        if(checkWin()) {
             gameLocked = true;
         }
     }
 
-    private void populateBoard() {
-        // TODO Populate board with all bombs randomly except click coords
+    private void populateBoard(int firstRow, int firstCol) {
+        Random random = new Random();
+
+        // Randomly places bombs away from first click
+        for(int i = 0; i < bombCount; i++) {
+            int targetRow = random.nextInt(tileHeight);
+            int targetCol = random.nextInt(tileWidth);
+
+            if(board[targetRow][targetCol].value == -1 || (targetRow == firstRow && targetCol == firstCol) ||
+                    isAdjacentToFirst(firstRow, firstCol, targetRow, targetCol)) i--;
+            else { board[targetRow][targetCol].value = -1; }
+        }
+
+        // Updates adjacent number counts
+        for(int row = 0; row < tileHeight; row++) {
+            for(int col = 0; col < tileWidth; col++) {
+                if(board[row][col].value == -1) continue;
+
+                board[row][col].value = getAdjacentBombCount(row, col);
+            }
+        }
     }
 
-    // FloodFill can use Cell.isHidden as seen variable for BFS(more like traversal)
+    private boolean isAdjacentToFirst(int firstRow, int firstCol, int targetRow, int targetCol) {
+        int deltaX = Math.abs(firstRow - targetRow);
+        int deltaY = Math.abs(firstCol - targetCol);
 
-    private boolean checkEnd() {
-        // TODO
-        return false;
+        return (deltaX <= 1 && deltaY <= 1);
+    }
+
+    private int getAdjacentBombCount(int row, int col) {
+        // TODO: Return adjacent bomb count to (row, col)
+
+        int count = 0;
+
+        if(row == 0); // Top elements don't need to be checked
+
+        if(row == (tileHeight - 1)); // Bottom elements don't need to be checked
+
+        if(col == 0); // Left elements don't need to be checked
+
+        if(col == (tileWidth - 1)); // right elements don't need to be checked
+
+        return 0;
+    }
+
+    private void makeMove(int row, int col) {
+        Cell cell = board[row][col];
+
+        cell.isHidden = false;
+        if(cell.value != 0) return;
+
+        floodFill(row, col);
+    }
+
+    private void floodFill(int row, int col) {
+        // TODO: floodFill on (x, y) using Cell.isHidden for BF Traversal
+    }
+
+    private boolean checkWin() {
+        for(int row = 0; row < tileHeight; row++) {
+            for(int col = 0; col < tileWidth; col++) {
+                if(board[row][col].value != -1 && board[row][col].isHidden) return false;
+            }
+        }
+
+        return true;
     }
 }

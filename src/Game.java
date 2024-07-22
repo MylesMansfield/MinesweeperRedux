@@ -37,7 +37,9 @@ public class Game {
                 });
             }
 
-            gameUI.handleEnd(board.getIsWin());
+            SwingUtilities.invokeLater(() -> {
+                gameUI.handleEnd(board.getIsWin(), board.getTileBoard());
+            });
 
             // Block until user is ready to start new game then letting thread continue will generate new game
             while(true); // Bootleg Wait TODO: block main until user selects restart
