@@ -192,17 +192,35 @@ public class GameUI extends JFrame {
         timer.start();
     }
 
-    public void handleEnd() {
+    public void handleEnd(boolean isWin) {
         timer.stop();
 
         if(bestScore < clockCount.get()) bestScore = clockCount.get();
 
         updateControlPanel();
 
+        boardPanel.removeAll();
+        boardPanel.repaint();
+
+        if(isWin) {
+            JLabel tempLabel = new JLabel("Win", SwingConstants.CENTER);
+            tempLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 50));
+
+            boardPanel.add(tempLabel);
+        } else {
+            JLabel tempLabel = new JLabel("Lose", SwingConstants.CENTER);
+            tempLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 50));
+
+            boardPanel.add(tempLabel);
+        }
+
+        boardPanel.revalidate();
+
         /* TODO:
             if(win) Change board to water without tile details (just grass and water no flags or numbers)
             else(loss) All bomb spots (leave everything as is except all bombs are show maybe highlight the bomb you detonated)
-            -
+
+           TODO:
             Show end screen with clockCount and bestScore with restart button on bottom
             if(win) score is clockCount
             else(loss) score is ---

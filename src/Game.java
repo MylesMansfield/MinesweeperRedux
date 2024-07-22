@@ -37,7 +37,7 @@ public class Game {
                 });
             }
 
-            gameUI.handleEnd();
+            gameUI.handleEnd(board.getIsWin());
 
             // Block until user is ready to start new game then letting thread continue will generate new game
             while(true); // Bootleg Wait TODO: block main until user selects restart
@@ -63,13 +63,13 @@ public class Game {
 
         if(event == null) return;
 
-        int tileRow = event.getY() / 40;
-        int tileCol = event.getX() / 40;
+        int tileRow = event.getY() / cellHeight;
+        int tileCol = event.getX() / cellWidth;
 
         if(event.getButton() == 1) { // Left Click
-            // TODO: handle board logic from click
+            board.handleClick(tileRow, tileCol);
         } else { // Right Click
-            // TODO: handle board logic from flag placement
+            board.changeFlag(tileRow, tileCol);
         }
     }
 }
