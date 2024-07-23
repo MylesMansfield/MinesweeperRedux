@@ -1,4 +1,6 @@
+import java.util.LinkedList;
 import java.util.Random;
+import java.util.Queue;
 
 public class Board {
     private int tileWidth;
@@ -23,15 +25,20 @@ public class Board {
 
         for(int row = 0; row < tileHeight; row++) {
             for(int col = 0; col < tileWidth; col++) {
-                if( (row + col) % 2 == 0 ) board[row][col] = new Cell(true);
-                else board[row][col] = new Cell(false);
+                if( (row + col) % 2 == 0 ) board[row][col] = new Cell(true, row, col);
+                else board[row][col] = new Cell(false, row, col);
             }
         }
     }
 
     public boolean isGameLocked() { return gameLocked; }
-    public boolean getIsWin() { return isWin; }
+    public boolean isWin() { return isWin; }
 
+    public int getFreeFlags() { return freeFlags; }
+
+    // TODO Future: have this work done on main thread after making a move and feed to threadsafe buffer
+    //       all current calls are done in EDT where they have to do this collation. (It's fine as is but
+    //       EDT shouldn't be doing this)
     public Tile[] getTileBoard() {
         Tile[] returnArray = new Tile[tileHeight * tileWidth];
 
@@ -75,6 +82,7 @@ public class Board {
 
         // Click on existing game
         if(!cell.isHidden) return; // If visible tile ignore
+        if(cell.hasFlag) return; // If tile has flag ignore
         if(cell.value == -1) { // Ends game if bomb is clicked on
             cell.isHidden = false;
             gameLocked = true;
@@ -119,32 +127,103 @@ public class Board {
     }
 
     private int getAdjacentBombCount(int row, int col) {
-        // TODO: Return adjacent bomb count to (row, col)
-
         int count = 0;
+        boolean checkTop = true, checkBottom = true, checkLeft = true, checkRight = true;
 
-        if(row == 0); // Top elements don't need to be checked
+        if(row == 0) checkTop = false;
+        if(row == (tileHeight - 1)) checkBottom = false;
+        if(col == 0) checkLeft = false;
+        if(col == (tileWidth - 1)) checkRight = false;
 
-        if(row == (tileHeight - 1)); // Bottom elements don't need to be checked
+        if(checkTop) {
+            if(board[row - 1][col].value == -1) count++;
+            if(checkLeft) {
+                if(board[row - 1][col - 1].value == -1) count++;
+            }
+            if(checkRight) {
+                if(board[row - 1][col + 1].value == -1) count++;
+            }
+        }
 
-        if(col == 0); // Left elements don't need to be checked
+        if(checkBottom) {
+            if(board[row + 1][col].value == -1) count++;
+            if(checkLeft) {
+                if(board[row + 1][col - 1].value == -1) count++;
+            }
+            if(checkRight) {
+                if(board[row + 1][col + 1].value == -1) count++;
+            }
+        }
 
-        if(col == (tileWidth - 1)); // right elements don't need to be checked
+        if(checkLeft) {
+            if(board[row][col - 1].value == -1) count++;
+        }
 
-        return 0;
+        if(checkRight) {
+            if(board[row][col + 1].value == -1) count++;
+        }
+
+        return count;
     }
 
     private void makeMove(int row, int col) {
         Cell cell = board[row][col];
 
-        cell.isHidden = false;
-        if(cell.value != 0) return;
+        if(cell.value != 0) {
+            cell.isHidden = false;
+            return;
+        }
 
-        floodFill(row, col);
+        floodFill(cell);
     }
 
-    private void floodFill(int row, int col) {
-        // TODO: floodFill on (x, y) using Cell.isHidden for BF Traversal
+    private void floodFill(Cell cell) {
+        Queue<Cell> queue = new LinkedList<>();
+        queue.offer(cell);
+
+        Cell current;
+        while(queue.peek() != null) {
+            current = queue.poll();
+            current.isHidden = false;
+
+            if(current.value != 0) continue;
+
+            // Check existing neighbors, if they aren't visible add to queue
+            boolean checkTop = true, checkBottom = true, checkLeft = true, checkRight = true;
+
+            if(current.row == 0) checkTop = false;
+            if(current.row == (tileHeight - 1)) checkBottom = false;
+            if(current.col == 0) checkLeft = false;
+            if(current.col == (tileWidth - 1)) checkRight = false;
+
+            if(checkTop) {
+                if(board[current.row - 1][current.col].isHidden) queue.offer(board[current.row - 1][current.col]);
+                if(checkLeft) {
+                    if(board[current.row - 1][current.col - 1].isHidden) queue.offer(board[current.row - 1][current.col - 1]);
+                }
+                if(checkRight) {
+                    if(board[current.row - 1][current.col + 1].isHidden) queue.offer(board[current.row - 1][current.col + 1]);
+                }
+            }
+
+            if(checkBottom) {
+                if(board[current.row + 1][current.col].isHidden) queue.offer(board[current.row + 1][current.col]);
+                if(checkLeft) {
+                    if(board[current.row + 1][current.col - 1].isHidden) queue.offer(board[current.row + 1][current.col - 1]);
+                }
+                if(checkRight) {
+                    if(board[current.row + 1][current.col + 1].isHidden) queue.offer(board[current.row + 1][current.col + 1]);
+                }
+            }
+
+            if(checkLeft) {
+                if(board[current.row][current.col - 1].isHidden) queue.offer(board[current.row][current.col - 1]);
+            }
+
+            if(checkRight) {
+                if(board[current.row][current.col + 1].isHidden) queue.offer(board[current.row][current.col + 1]);
+            }
+        }
     }
 
     private boolean checkWin() {

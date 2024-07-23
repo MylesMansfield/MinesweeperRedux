@@ -24,6 +24,11 @@ public class Game {
             Board board = new Board(tileWidth, tileHeight, bombCount);
             int clicksMade = 0;
 
+            SwingUtilities.invokeLater(() -> {
+                gameUI.updateControlPanel(board.getFreeFlags());
+                gameUI.updateBoardPanel(board.getTileBoard());
+            });
+
             while(!board.isGameLocked()) {
                 handleClick(board); // Handles logic from valid clicks
 
@@ -32,13 +37,13 @@ public class Game {
 
                 // Update GUI
                 SwingUtilities.invokeLater(() -> {
-                    gameUI.updateControlPanel();
+                    gameUI.updateControlPanel(board.getFreeFlags());
                     gameUI.updateBoardPanel(board.getTileBoard());
                 });
             }
 
             SwingUtilities.invokeLater(() -> {
-                gameUI.handleEnd(board.getIsWin(), board.getTileBoard());
+                gameUI.handleEnd(board.isWin(), board.getTileBoard());
             });
 
             // Block until user is ready to start new game then letting thread continue will generate new game

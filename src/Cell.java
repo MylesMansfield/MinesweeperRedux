@@ -3,14 +3,18 @@ public class Cell {
     public boolean isLight;
 
     public boolean hasFlag = false;
-
     public int value = 0; // -1 Represents Bomb
 
-    public Cell(boolean isLight) {
+    public int row;
+    public int col;
+
+    public Cell(boolean isLight, int row, int col) {
         this.isLight = isLight;
+        this.row = row;
+        this.col = col;
     }
 
-    // TODO: Use MatteBorder to make proper border with #86AE3B (Border) (134 174 59)
+    // TODO Future: Use MatteBorder to make proper border with #86AE3B (Border) (134 174 59)
     // https://stackoverflow.com/questions/2174319/is-it-possible-to-have-a-java-swing-border-only-on-the-top-side
     public TileType getTileType() {
         if(isHidden) { // Hidden tile
