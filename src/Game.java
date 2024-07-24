@@ -1,4 +1,4 @@
-import javax.swing.*;
+import javax.swing.SwingUtilities;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -8,9 +8,10 @@ public class Game {
     private static final int cellWidth  = 40;
     private static final int cellHeight = 40;
 
-    private static final int bombCount  = 40;
+    private static final int bombCount  = 45;
 
     private static LinkedBlockingQueue<MouseEvent> clickQueue = new LinkedBlockingQueue<MouseEvent>();
+    private static volatile boolean restartGame = false;
 
     private static GameUI gameUI;
 
@@ -20,19 +21,20 @@ public class Game {
     }
 
     private static void gameLoop() {
-        while(true) {
+        while(true) { // Overarching game loop that lets you play as many games as you want
             Board board = new Board(tileWidth, tileHeight, bombCount);
             int clicksMade = 0;
 
             SwingUtilities.invokeLater(() -> {
                 gameUI.updateControlPanel(board.getFreeFlags());
                 gameUI.updateBoardPanel(board.getTileBoard());
+                gameUI.unlockBoard();
             });
 
-            while(!board.isGameLocked()) {
-                handleClick(board); // Handles logic from valid clicks
+            while(!board.isGameLocked()) { // Game loop for a single game
+                handleClick(board);
 
-                if(clicksMade == 0) gameUI.handleBegin();
+                if(clicksMade == 0) gameUI.startTimer();
                 clicksMade++;
 
                 // Update GUI
@@ -46,27 +48,22 @@ public class Game {
                 gameUI.handleEnd(board.isWin(), board.getTileBoard());
             });
 
-            // Block until user is ready to start new game then letting thread continue will generate new game
-            while(true); // Bootleg Wait TODO: block main until user selects restart
+            while(!restartGame);
+            restartGame = false;
         }
     }
 
     public static void updateClick(MouseEvent event) {
         try {
             clickQueue.put(event);
-        } catch (InterruptedException e) {
-            // Ignore Click Event if something actually ends up interrupting this
-        }
+        } catch (InterruptedException e) {}
     }
 
     private static void handleClick(Board board) {
         MouseEvent event = null;
 
-        try {
-            event = clickQueue.take();
-        } catch (InterruptedException e) {
-            // Ignore Click Event if something actually ends up interrupting this
-        }
+        try { event = clickQueue.take(); }
+        catch (InterruptedException e) {}
 
         if(event == null) return;
 
@@ -79,4 +76,6 @@ public class Game {
             board.changeFlag(tileRow, tileCol);
         }
     }
+
+    public static void restartGame() { restartGame = true; }
 }

@@ -92,8 +92,20 @@ public class Board {
         makeMove(row, col);
 
         if(checkWin()) {
+            isWin = true;
             gameLocked = true;
+
+            // Turns all tiles that are visible into water
+            for( row = 0; row < tileHeight; row++) {
+                for( col = 0; col < tileWidth; col++) {
+                    if(!board[row][col].isHidden) board[row][col].isWater = true;
+                    board[row][col].hasFlag = false;
+                    board[row][col].value = 0;
+                }
+            }
         }
+
+        // FOR threadsafe buffer move getTileBoard logic here and replace old logic with returning buffer
     }
 
     private void populateBoard(int firstRow, int firstCol) {
@@ -137,31 +149,18 @@ public class Board {
 
         if(checkTop) {
             if(board[row - 1][col].value == -1) count++;
-            if(checkLeft) {
-                if(board[row - 1][col - 1].value == -1) count++;
-            }
-            if(checkRight) {
-                if(board[row - 1][col + 1].value == -1) count++;
-            }
+            if(checkLeft && board[row - 1][col - 1].value == -1) count++;
+            if(checkRight && board[row - 1][col + 1].value == -1) count++;
         }
 
         if(checkBottom) {
             if(board[row + 1][col].value == -1) count++;
-            if(checkLeft) {
-                if(board[row + 1][col - 1].value == -1) count++;
-            }
-            if(checkRight) {
-                if(board[row + 1][col + 1].value == -1) count++;
-            }
+            if(checkLeft && board[row + 1][col - 1].value == -1) count++;
+            if(checkRight && board[row + 1][col + 1].value == -1) count++;
         }
 
-        if(checkLeft) {
-            if(board[row][col - 1].value == -1) count++;
-        }
-
-        if(checkRight) {
-            if(board[row][col + 1].value == -1) count++;
-        }
+        if(checkLeft && board[row][col - 1].value == -1) count++;
+        if(checkRight && board[row][col + 1].value == -1) count++;
 
         return count;
     }
@@ -198,31 +197,18 @@ public class Board {
 
             if(checkTop) {
                 if(board[current.row - 1][current.col].isHidden) queue.offer(board[current.row - 1][current.col]);
-                if(checkLeft) {
-                    if(board[current.row - 1][current.col - 1].isHidden) queue.offer(board[current.row - 1][current.col - 1]);
-                }
-                if(checkRight) {
-                    if(board[current.row - 1][current.col + 1].isHidden) queue.offer(board[current.row - 1][current.col + 1]);
-                }
+                if(checkLeft && board[current.row - 1][current.col - 1].isHidden) queue.offer(board[current.row - 1][current.col - 1]);
+                if(checkRight && board[current.row - 1][current.col + 1].isHidden) queue.offer(board[current.row - 1][current.col + 1]);
             }
 
             if(checkBottom) {
                 if(board[current.row + 1][current.col].isHidden) queue.offer(board[current.row + 1][current.col]);
-                if(checkLeft) {
-                    if(board[current.row + 1][current.col - 1].isHidden) queue.offer(board[current.row + 1][current.col - 1]);
-                }
-                if(checkRight) {
-                    if(board[current.row + 1][current.col + 1].isHidden) queue.offer(board[current.row + 1][current.col + 1]);
-                }
+                if(checkLeft && board[current.row + 1][current.col - 1].isHidden) queue.offer(board[current.row + 1][current.col - 1]);
+                if(checkRight && board[current.row + 1][current.col + 1].isHidden) queue.offer(board[current.row + 1][current.col + 1]);
             }
 
-            if(checkLeft) {
-                if(board[current.row][current.col - 1].isHidden) queue.offer(board[current.row][current.col - 1]);
-            }
-
-            if(checkRight) {
-                if(board[current.row][current.col + 1].isHidden) queue.offer(board[current.row][current.col + 1]);
-            }
+            if(checkLeft && board[current.row][current.col - 1].isHidden) queue.offer(board[current.row][current.col - 1]);
+            if(checkRight && board[current.row][current.col + 1].isHidden) queue.offer(board[current.row][current.col + 1]);
         }
     }
 

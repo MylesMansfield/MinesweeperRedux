@@ -12,22 +12,28 @@ public class GameUI extends JFrame {
     private Color darkTileHidden = new Color(163,208, 73);
     private Color lightTileVisible = new Color(229,194, 158);
     private Color darkTileVisible = new Color(215,185, 152);
+    private Color lightTileWater = new Color(142, 200, 249);
+    private Color darkTileWater = new Color(130, 197, 246);
 
     private AtomicInteger flagCount;
     private AtomicInteger clockCount = new AtomicInteger(0);
-    private int bestScore = 0;
+    private AtomicInteger bestScore = new AtomicInteger(Integer.MAX_VALUE);
 
     private JPanel controlPanel;
     private JPanel boardPanel;
     private JLabel flagLabel;
     private JLabel clockLabel;
+    private JLabel trophyLabel;
+    private JButton restartButton;
 
     private ImageIcon flagPanelIcon;
     private ImageIcon clockPanelIcon;
+    private ImageIcon trophyPanelIcon;
     private ImageIcon flagTileIcon;
     private ImageIcon bombTileIcon;
 
     private Timer timer;
+    private BoardAdapter mouseListener = new BoardAdapter();
 
     public GameUI(int tileWidth, int tileHeight, int cellWidth, int cellHeight, int bombCount) {
         this.tileWidth = tileWidth;
@@ -46,13 +52,16 @@ public class GameUI extends JFrame {
                     cellWidth * 2, cellHeight * 2, Image.SCALE_SMOOTH));
             clockPanelIcon = new ImageIcon(((new ImageIcon("resources/clock.png")).getImage()).getScaledInstance(
                     (int)(cellWidth * 1.75), (int)(cellHeight * 1.75), Image.SCALE_SMOOTH));
+            trophyPanelIcon = new ImageIcon(((new ImageIcon("resources/trophy.png")).getImage()).getScaledInstance(
+                    (int)(cellWidth * 1.75), (int)(cellHeight * 1.75), Image.SCALE_SMOOTH));
+
             flagTileIcon = new ImageIcon(((new ImageIcon("resources/flag.png")).getImage()).getScaledInstance(
                     cellWidth, cellHeight, Image.SCALE_SMOOTH));
             bombTileIcon = new ImageIcon(((new ImageIcon("resources/bomb.png")).getImage()).getScaledInstance(
                     cellWidth, cellHeight, Image.SCALE_SMOOTH));
 
             // Creates controlPanel
-            controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 0));
+            controlPanel = new JPanel();
             controlPanel.setPreferredSize(new Dimension(tileWidth * cellWidth, 2 * cellHeight));
             controlPanel.setBackground(new Color(74, 117, 44));
 
@@ -67,6 +76,19 @@ public class GameUI extends JFrame {
             clockLabel.setForeground(new Color(250, 250, 250));
             clockLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 40));
 
+            trophyLabel = new JLabel();
+            trophyLabel.setIcon(trophyPanelIcon);
+            trophyLabel.setForeground(new Color(250, 250, 250));
+            trophyLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 40));
+
+            restartButton = new JButton();
+            restartButton.setForeground(new Color(250, 250, 250));
+            restartButton.setBackground(new Color(74,90,45));
+            restartButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 35));
+            restartButton.addActionListener(e -> {
+                Game.restartGame();
+            });
+
             timer = new Timer(1000, e -> {
                 if(clockCount.get() == 999) {
                     timer.stop();
@@ -80,7 +102,7 @@ public class GameUI extends JFrame {
             boardPanel = new JPanel(new GridLayout(tileHeight, tileWidth, 0, 0));
             boardPanel.setPreferredSize(new Dimension(tileWidth * cellWidth, tileHeight * cellHeight));
             boardPanel.setBackground(new Color(74, 117, 44));
-            boardPanel.addMouseListener(new BoardAdapter());
+            boardPanel.addMouseListener(mouseListener);
 
             add(controlPanel, BorderLayout.NORTH);
             add(boardPanel, BorderLayout.CENTER);
@@ -97,6 +119,7 @@ public class GameUI extends JFrame {
         controlPanel.removeAll();
         controlPanel.repaint();
 
+        controlPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 40, 0));
         flagLabel.setText(String.format("%02d", flagCount.intValue()));
         clockLabel.setText(String.format("%03d", clockCount.intValue()));
 
@@ -106,6 +129,8 @@ public class GameUI extends JFrame {
         controlPanel.revalidate();
     }
 
+    // TODO Future: Instead of making new labels every time the board is updated, grab requisite pre-instantiated label
+    //              from some constant class and just add specific references as needed (24 types i think)
     public void updateBoardPanel(Tile[] updatedBoard) {
         boardPanel.removeAll();
         boardPanel.repaint();
@@ -119,6 +144,8 @@ public class GameUI extends JFrame {
                 case darkHidden -> tempLabel.setBackground(darkTileHidden);
                 case lightVisible -> tempLabel.setBackground(lightTileVisible);
                 case darkVisible -> tempLabel.setBackground(darkTileVisible);
+                case lightWater -> tempLabel.setBackground(lightTileWater);
+                case darkWater -> tempLabel.setBackground(darkTileWater);
             }
 
             tempLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
@@ -167,47 +194,40 @@ public class GameUI extends JFrame {
         boardPanel.revalidate();
     }
 
-    public void handleBegin() {
-        clockCount.set(0);
-        timer.start();
-    }
+    public void startTimer() { timer.start(); }
+    public void unlockBoard() { mouseListener.enabled = true; }
 
     public void handleEnd(boolean isWin, Tile[] updatedBoard) {
         timer.stop();
+        mouseListener.enabled = false;
 
-        if(bestScore < clockCount.get()) bestScore = clockCount.get();
-
-        updateControlPanel(flagCount.get());
         updateBoardPanel(updatedBoard);
 
-        /*
-        boardPanel.removeAll();
-        boardPanel.repaint();
+        controlPanel.removeAll();
+        controlPanel.repaint();
+
+        controlPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 40, 5));
 
         if(isWin) {
-            JLabel tempLabel = new JLabel("Win", SwingConstants.CENTER);
-            tempLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 50));
+            if(bestScore.get() > clockCount.get()) bestScore = new AtomicInteger(clockCount.get());
 
-            boardPanel.add(tempLabel);
+            restartButton.setText("Play again?");
+            clockLabel.setText(String.format("%03d", clockCount.intValue()));
         } else {
-            JLabel tempLabel = new JLabel("Lose", SwingConstants.CENTER);
-            tempLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 50));
+            updateBoardPanel(updatedBoard);
 
-            boardPanel.add(tempLabel);
+            restartButton.setText("Try again?");
+            clockLabel.setText("---");
         }
+        clockCount.set(0);
 
-        boardPanel.revalidate();
-        */
+        if(bestScore.get() == Integer.MAX_VALUE) trophyLabel.setText("---");
+        else trophyLabel.setText(String.format("%03d", bestScore.get()));
 
+        controlPanel.add(clockLabel);
+        controlPanel.add(trophyLabel);
+        controlPanel.add(restartButton);
 
-        /* TODO:
-            if(win) Change board to water without tile details (just grass and water no flags or numbers)
-            else(loss) All bomb spots (leave everything as is except reveal all bombs without flag)
-
-           TODO:
-            Show end screen with clockCount and bestScore with restart button on bottom
-            if(win) score is clockCount
-            else(loss) score is ---
-        */
+        controlPanel.revalidate();
     }
 }

@@ -1,3 +1,1 @@
-public enum TileType {lightHidden, darkHidden, lightVisible, darkVisible}
-
-// TODO Future: Add border variations
+public enum TileType {lightHidden, darkHidden, lightVisible, darkVisible, lightWater, darkWater}
