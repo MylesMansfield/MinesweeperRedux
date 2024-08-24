@@ -82,8 +82,6 @@ public class GameUI extends JFrame {
             trophyLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 40));
 
             restartButton = new JButton();
-            restartButton.setForeground(new Color(250, 250, 250));
-            restartButton.setBackground(new Color(74,90,45));
             restartButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 35));
             restartButton.addActionListener(e -> {
                 Game.restartGame();
@@ -212,11 +210,15 @@ public class GameUI extends JFrame {
             if(bestScore.get() > clockCount.get()) bestScore = new AtomicInteger(clockCount.get());
 
             restartButton.setText("Play again?");
+            restartButton.setForeground(new Color(250, 250, 250));
+            restartButton.setBackground(darkTileWater);
             clockLabel.setText(String.format("%03d", clockCount.intValue()));
         } else {
             updateBoardPanel(updatedBoard);
 
             restartButton.setText("Try again?");
+            restartButton.setForeground(Color.BLACK);
+            restartButton.setBackground(darkTileVisible);
             clockLabel.setText("---");
         }
         clockCount.set(0);
