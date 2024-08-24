@@ -7,4 +7,8 @@ A simple implementation of the classic Minesweeper game based off the version fo
   <img src="/resources/pic2.png" width="405" />
 </p>
 
+In order to run first install Ant, then execute following commands:
+1. ant
+2. ant run
+
 If anyone has any feedback related to improvements or mistakes please let me know.
